@@ -31,6 +31,27 @@ const commandLineOptions = commandLineArgs([
 		multiple: false,
 		defaultValue: false,
 	},
+	{
+		name: "data",
+		alias: "d",
+		type: Boolean,
+		multiple: false,
+		defaultValue: false,
+	},
+	{
+		name: "files",
+		alias: "f",
+		type: Boolean,
+		multiple: false,
+		defaultValue: false,
+	},
+	{
+		name: "users",
+		alias: "u",
+		type: Boolean,
+		multiple: false,
+		defaultValue: false,
+	},
 ]);
 
 const tasks = new Listr([
@@ -59,8 +80,9 @@ const tasks = new Listr([
 	{
 		title: "Migrating Users",
 		skip: (context) =>
-			context.completedSteps.roles === true &&
-			context.completedSteps.users === true,
+			commandLineOptions.users      === false ||
+			(context.completedSteps.roles === true &&
+			 context.completedSteps.users === true),
 		task: migrateUsers,
 	},
 	{
@@ -71,13 +93,17 @@ const tasks = new Listr([
 		task: migrateRelations,
 	},
 	{
-		title: "Migration Files",
-		skip: (context) => context.completedSteps.files === true,
+		title: "Migrating Files",
+		skip: (context) =>
+			commandLineOptions.files     === false ||
+			context.completedSteps.files === true,
 		task: migrateFiles,
 	},
 	{
 		title: "Migrating Data",
-		skip: (context) => context.completedSteps.data === true,
+		skip: (context) =>
+			commandLineOptions.data     === false ||
+			context.completedSteps.data === true,
 		task: migrateData,
 	},
 
