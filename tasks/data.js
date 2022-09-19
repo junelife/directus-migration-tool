@@ -34,6 +34,10 @@ async function getCounts(context) {
 			(c) => c.collection === collection.collection
 		);
 
+		// TODO: see if there's a better schema element to examine
+		// Do not treat V9 folders as collections
+		if (collection.meta.icon === 'folder') return;
+
 		let hasStatus = false;
 		const params = {
 			limit: 1,
