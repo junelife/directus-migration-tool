@@ -19,6 +19,13 @@ const commandLineOptions = commandLineArgs([
 		defaultValue: [],
 	},
 	{
+		name: "onlyCollections",
+		alias: "o",
+		type: String,
+		multiple: true,
+		defaultValue: [],
+	},
+	{
 		name: "useContext",
 		alias: "c",
 		type: String,
@@ -81,6 +88,7 @@ const tasks = new Listr([
 			context.completedSteps.collections === true,
 		task: (context) => {
 			context.skipCollections = commandLineOptions.skipCollections;
+			context.onlyCollections = commandLineOptions.onlyCollections;
 			return downloadSchema(context);
 		},
 	},
@@ -92,6 +100,7 @@ const tasks = new Listr([
 			 context.completedSteps.collections === true),
 		task: (context) => {
 			context.skipCollections = commandLineOptions.skipCollections;
+			context.onlyCollections = commandLineOptions.onlyCollections;
 			return migrateSchema(context);
 		},
 	},
@@ -122,7 +131,11 @@ const tasks = new Listr([
 		skip: (context) =>
 			commandLineOptions.data     === false ||
 			context.completedSteps.data === true,
-		task: migrateData,
+		task: (context) => {
+			context.skipCollections = commandLineOptions.skipCollections;
+			context.onlyCollections = commandLineOptions.onlyCollections;
+			return migrateData(context);
+		},
 	},
 
 	{
