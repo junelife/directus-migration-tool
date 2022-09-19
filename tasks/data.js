@@ -54,9 +54,13 @@ async function getCounts(context) {
 		});
 
 		if (hasStatus) {
-			context.counts[collection.collection] = Object.keys(
-				count.data.meta.status_count
-			).reduce((acc, cur) => acc + count.data.meta.status_count[cur], 0);
+			if (process.env.V8_VERSION === undefined) {
+				context.counts[collection.collection] = Object.keys(
+					count.data.meta.status_count
+				).reduce((acc, cur) => acc + count.data.meta.status_count[cur], 0);
+			} else {
+				context.counts[collection.collection] = count.data.meta.filter_count
+			}
 		} else {
 			context.counts[collection.collection] = count.data.meta.total_count;
 		}
