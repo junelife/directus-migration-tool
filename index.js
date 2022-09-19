@@ -52,6 +52,12 @@ const commandLineOptions = commandLineArgs([
 		multiple: false,
 		defaultValue: false,
 	},
+	{
+		name: "schema",
+		type: Boolean,
+		multiple: false,
+		defaultValue: false,
+	},
 ]);
 
 const tasks = new Listr([
@@ -70,8 +76,9 @@ const tasks = new Listr([
 	{
 		title: "Migrating Schema",
 		skip: (context) =>
-			context.completedSteps.schema === true &&
-			context.completedSteps.collections === true,
+			commandLineOptions.schema           === false ||
+			(context.completedSteps.schema      === true &&
+			 context.completedSteps.collections === true),
 		task: (context) => {
 			context.skipCollections = commandLineOptions.skipCollections;
 			return migrateSchema(context);
