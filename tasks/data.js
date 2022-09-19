@@ -190,6 +190,10 @@ async function insertBatch(collection, page, context, task) {
 		const params = {
 			offset: page * LIMIT,
 			limit: LIMIT,
+			// when fetching UUID-based collection,
+			// unsorted not returning all data with pagination.
+			// TODO: determine key field from schema
+			sort: 'id',
 		};
 
 		if (contextCollection && contextCollection?.meta?.archive_value) {
