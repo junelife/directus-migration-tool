@@ -32,6 +32,9 @@ export async function downloadSchema(context) {
 		)
 		.filter(
 			(collection) => !context.skipCollections.includes(collection.collection)
+		)
+		.filter(
+			(collection) => context.onlyCollections.includes(collection.collection)
 		);
 }
 
