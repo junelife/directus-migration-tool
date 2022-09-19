@@ -9,16 +9,6 @@ export async function migrateSchema(context) {
 
 	return new Listr([
 		{
-			title: "Downloading Schema",
-			skip: (context) => context.completedSteps.schema === true,
-			task: () => downloadSchema(context),
-		},
-		{
-			title: "Saving schema context",
-			skip: (context) => context.completedSteps.schema === true,
-			task: () => writeContext(context),
-		},
-		{
 			title: "Creating Collections",
 			skip: (context) => context.completedSteps.collections === true,
 			task: () => migrateCollections(context),
@@ -34,7 +24,7 @@ export async function migrateSchema(context) {
 	]);
 }
 
-async function downloadSchema(context) {
+export async function downloadSchema(context) {
 	const response = await apiV8.get("/collections");
 	context.collections = response.data.data
 		.filter(

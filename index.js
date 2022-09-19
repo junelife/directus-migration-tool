@@ -2,6 +2,7 @@ import Listr from "listr";
 
 import commandLineArgs from "command-line-args";
 import * as fs from "fs";
+import { downloadSchema } from "./tasks/schema.js";
 import { migrateSchema } from "./tasks/schema.js";
 import { migrateFiles } from "./tasks/files.js";
 import { migrateUsers } from "./tasks/users.js";
@@ -72,6 +73,16 @@ const tasks = new Listr([
 			context.completedSteps.schema === true &&
 			context.completedSteps.relations === true,
 		task: fetchRelations,
+	},
+	{
+		title: "Downloading Schema",
+		skip: (context) =>
+			context.completedSteps.schema === true &&
+			context.completedSteps.collections === true,
+		task: (context) => {
+			context.skipCollections = commandLineOptions.skipCollections;
+			return downloadSchema(context);
+		},
 	},
 	{
 		title: "Migrating Schema",
