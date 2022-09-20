@@ -1,5 +1,5 @@
 import Listr from "listr";
-import { apiV8, apiV9 } from "../api.js";
+import { apiV8, apiV9, sourceIsV8 } from "../api.js";
 import { typeMap } from "../constants/type-map.js";
 import { interfaceMap } from "../constants/interface-map.js";
 import { writeContext } from "../index.js";
@@ -36,6 +36,30 @@ export async function downloadSchema(context) {
 		.filter(
 			(collection) => context.onlyCollections.includes(collection.collection)
 		);
+
+	if (!sourceIsV8()) {
+		// In Directus V9, fields are not included on the collections model.
+		// They need to be fetched independently.
+		const fieldsResponse = await apiV8.get("/fields");
+		context.fields = fieldsResponse.data.data
+			.filter(
+				(field) => field.collection.startsWith("directus_") === false
+			)
+			.filter(
+				(field) => !context.skipCollections.includes(field.collection)
+			);
+		// console.log('ROB: context.fields : %o', context.fields)
+		// context.collections.forEach(collection =>
+		// 	collection.fields = context.fields.find(field => field.collection === collection.collection)
+		// )
+		context.collections.forEach(collection =>
+			collection.fields = context.fields.filter(
+				(field) => {
+					return field.collection === collection.collection;
+				}
+			)
+		)
+	}
 }
 
 async function migrateCollections(context) {
