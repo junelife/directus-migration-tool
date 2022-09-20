@@ -32,10 +32,13 @@ export async function downloadSchema(context) {
 		)
 		.filter(
 			(collection) => !context.skipCollections.includes(collection.collection)
-		)
-		.filter(
+		);
+
+	if (context.onlyCollections !== []) {
+		context.collections = context.collections.filter(
 			(collection) => context.onlyCollections.includes(collection.collection)
 		);
+	}
 
 	if (!sourceIsV8()) {
 		// In Directus V9, fields are not included on the collections model.
