@@ -4,6 +4,7 @@ import commandLineArgs from "command-line-args";
 import * as fs from "fs";
 import { downloadSchema } from "./tasks/schema.js";
 import { migrateSchema } from "./tasks/schema.js";
+import { migrateFolders } from "./tasks/folders.js";
 import { migrateFiles } from "./tasks/files.js";
 import { migrateUsers } from "./tasks/users.js";
 import { migrateData } from "./tasks/data.js";
@@ -118,6 +119,13 @@ const tasks = new Listr([
 			context.completedSteps.relationsv8 === true &&
 			context.completedSteps.relations === true,
 		task: migrateRelations,
+	},
+	{
+		title: "Migrating Folders",
+		skip: (context) =>
+			commandLineOptions.files     === false ||
+			context.completedSteps.files === true,
+		task: migrateFolders,
 	},
 	{
 		title: "Migrating Files",
