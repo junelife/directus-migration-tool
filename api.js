@@ -50,4 +50,12 @@ apiV9.interceptors.response.use(
 	}
 );
 
-export { apiV8, apiV9 };
+function sourceIsV8() {
+	if ((process.env.V8_VERSION === undefined) || (process.env.V8_VERSION < 9)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+export { apiV8, apiV9, sourceIsV8 };
