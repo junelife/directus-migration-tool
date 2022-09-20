@@ -226,7 +226,15 @@ async function insertBatch(collection, page, context, task) {
 		["datetime", "date"].includes(field.type)
 	);
 
-	const itemRecords = recordsResponse.data.data.flatMap((item) => {
+	const aliasFields = Object.values(collection.fields).filter((field) =>
+		["alias", "o2m"].includes(field.type)
+	);
+
+	let itemRecords = recordsResponse.data.data.flatMap((item) => {
+		for (const alias of aliasFields) {
+			delete item[alias.field];
+		}
+
 		if (context.dataMap?.[collection.collection]?.[item.id]) return [];
 
 		if (
@@ -258,12 +266,35 @@ async function insertBatch(collection, page, context, task) {
 		return [item];
 	});
 
-	if (!itemRecords.length) return;
+	// Retry failed batches, after removing failed elements
+	while (true) {
+		if (!itemRecords.length) return;
+		try {
+			if (collection.single === true) {
+				await apiV9.patch(`/items/${collection.collection}`, itemRecords[0]);
+			} else {
+				await apiV9.post(`/items/${collection.collection}`, itemRecords);
+			}
+		} catch (error) {
+			const re = /[^{]*(?<err>{[\s\S]+)/mig;
+			let response = re.exec(error)
 
-	if (collection.single === true) {
-		await apiV9.patch(`/items/${collection.collection}`, itemRecords[0]);
-	} else {
-		await apiV9.post(`/items/${collection.collection}`, itemRecords);
+			const errors = JSON.parse(response.groups.err).errors
+			let start = itemRecords.length;
+			for (let e of errors) {
+				if (e.extensions.code === 'RECORD_NOT_UNIQUE') {
+					itemRecords = itemRecords.filter((item) => {
+						return (item.id != e.extensions.invalid);
+					})
+				}
+			}
+
+			if ((context.allowFailures === false) &&
+				(itemRecords.length === start)
+			) {
+				throw(error);
+			}
+		}
 	}
 
 	const collectionMap = itemRecords.reduce(
