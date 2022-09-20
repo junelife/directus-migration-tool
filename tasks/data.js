@@ -1,5 +1,5 @@
 import Listr from "listr";
-import { apiV8, apiV9 } from "../api.js";
+import { apiV8, apiV9, sourceIsV8 } from "../api.js";
 import { writeContext } from "../index.js";
 
 const LIMIT = 10;
@@ -54,7 +54,7 @@ async function getCounts(context) {
 		});
 
 		if (hasStatus) {
-			if (process.env.V8_VERSION === undefined) {
+			if (sourceIsV8()) {
 				context.counts[collection.collection] = Object.keys(
 					count.data.meta.status_count
 				).reduce((acc, cur) => acc + count.data.meta.status_count[cur], 0);
