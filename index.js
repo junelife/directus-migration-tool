@@ -108,7 +108,6 @@ const tasks = new Listr([
 	{
 		title: "Migrating Users",
 		skip: (context) =>
-			commandLineOptions.users      === false ||
 			(context.completedSteps.roles === true &&
 			 context.completedSteps.users === true),
 		task: migrateUsers,

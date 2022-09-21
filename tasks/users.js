@@ -1,6 +1,7 @@
 import Listr from "listr";
 import { apiV8, apiV9 } from "../api.js";
 import { writeContext } from "../index.js";
+import { commandLineOptions } from "../index.js";
 
 export async function migrateUsers(context) {
 	return new Listr([
@@ -11,7 +12,9 @@ export async function migrateUsers(context) {
 		},
 		{
 			title: "Creating Roles",
-			skip: (context) => context.completedSteps.roles === true,
+			skip: (context) =>
+				commandLineOptions.users === false ||
+				context.completedSteps.roles === true,
 			task: createRoles,
 		},
 		{
@@ -29,7 +32,9 @@ export async function migrateUsers(context) {
 		},
 		{
 			title: "Creating Users",
-			skip: (context) => context.completedSteps.users === true,
+			skip: (context) =>
+				commandLineOptions.users === false ||
+				context.completedSteps.users === true,
 			task: createUsers,
 		},
 		{
@@ -90,6 +95,28 @@ async function downloadUsers(context) {
 	});
 	context.users = response.data.data;
 	context.userMap = context.userMap || {};
+	for (const user of context.users) {
+		const v9Response = await apiV9.get(
+			"/users",
+			{
+				params:{
+					filter: {
+						_or: [
+						{first_name: {_eq: user.first_name}},
+						{last_name: {_eq: user.last_name}},
+						{email: {_eq: user.email}},
+					]
+				}
+				}
+			},
+		);
+		// TODO: check for multiple matches
+		const v9Users = v9Response.data.data;
+		if (v9Users.length > 0) {
+			const v9User = v9Response.data.data[0];
+			context.userMap[user.id] = v9User.id;
+		}
+	}
 }
 
 async function createUsers(context) {
