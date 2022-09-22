@@ -1,5 +1,5 @@
 import Listr from "listr";
-import { apiV8, apiV9 } from "../api.js";
+import { apiV8, apiV9, sourceIsV8 } from "../api.js";
 import { writeContext } from "../index.js";
 
 export async function fetchRelations(context) {
@@ -59,9 +59,10 @@ async function migrateRelationsData(context) {
 		if (context.relationsMigrated[relation.id]) return [];
 		migrated.push(relation.id);
 
-		if (relation.collection_many.startsWith("directus_")) return [];
+		if (sourceIsV8()) {
+			if (relation.collection_many.startsWith("directus_")) return [];
 
-		return [
+			return [
 			{
 				meta: {
 					many_collection: relation.collection_many,
@@ -75,7 +76,11 @@ async function migrateRelationsData(context) {
 				related_collection: relation.collection_one,
 				schema: null,
 			},
-		];
+			];
+		} else {
+			if (relation.meta.many_collection.startsWith("directus_")) return [];
+			return [relation];
+		}
 	});
 
 	const systemFields = context.collections
