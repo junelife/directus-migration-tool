@@ -192,8 +192,9 @@ async function insertBatch(collection, page, context, task) {
 			limit: LIMIT,
 			// when fetching UUID-based collection,
 			// unsorted not returning all data with pagination.
-			// TODO: determine key field from schema
-			sort: 'id',
+			sort: collection.fields.find((field) =>
+				(field.schema.is_primary_key === true)
+			).field,
 		};
 
 		if (contextCollection && contextCollection?.meta?.archive_value) {
