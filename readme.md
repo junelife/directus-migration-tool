@@ -16,6 +16,8 @@ This tool will copy over:
 - Permissions
 - Activity / revisions
 
+A deeper dive is here: [readme_details.md](readme_details.md)
+
 ## Usage
 
 1. Clone this repo
