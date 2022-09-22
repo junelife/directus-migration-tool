@@ -1,5 +1,5 @@
 import Listr from "listr";
-import { apiV8, apiV9 } from "../api.js";
+import { apiV8, apiV9, sourceIsV8 } from "../api.js";
 import { writeContext } from "../index.js";
 import { commandLineOptions } from "../index.js";
 
@@ -56,7 +56,8 @@ async function downloadRoles(context) {
 }
 
 async function createRoles(context) {
-	const rolesV9 = context.roles.map((role) => ({
+	const rolesV9 = context.roles.map((role) => (
+		(sourceIsV8()) ? {
 		name: role.name,
 		icon: "supervised_user_circle",
 		description: role.description,
@@ -64,6 +65,14 @@ async function createRoles(context) {
 		enforce_tfa: !!role.enforce_2fa,
 		admin_access: role.id === 1, // 1 was hardcoded admin role
 		app_access: true,
+	} : {
+		name: role.name,
+		icon: role.icon,
+		description: role.description,
+		ip_access: role.ip_whitelist,
+		enforce_tfa: role.enforce_tfa,
+		admin_access: role.admin_access,
+		app_access: role.app_access,
 	}));
 
 	const createdRoles = await apiV9.post("/roles", rolesV9, {
