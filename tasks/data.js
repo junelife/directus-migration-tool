@@ -44,6 +44,7 @@ async function getCounts(context) {
 			meta: "total_count",
 		};
 
+		// TODO: what is this for?
 		if (contextCollection && contextCollection?.meta?.archive_value) {
 			hasStatus = true;
 			params.meta = "*";
@@ -246,8 +247,11 @@ async function insertBatch(collection, page, context, task) {
 
 		for (const systemRelation of systemRelationsForCollection) {
 			if (systemRelation?.meta?.one_collection === "directus_users") {
+				// TODO: Determine whether to allow this, running with no userMap
 				item[systemRelation?.meta?.many_field] =
-					context.userMap[item[systemRelation?.meta?.many_field]];
+					(context.userMap) ?
+					context.userMap[item[systemRelation?.meta?.many_field]]
+					: null;
 			} else if (systemRelation?.meta?.one_collection === "directus_files") {
 				item[systemRelation?.meta?.many_field] =
 					context.fileMap[item[systemRelation?.meta?.many_field]];
