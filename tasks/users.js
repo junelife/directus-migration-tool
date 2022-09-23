@@ -51,7 +51,10 @@ export async function migrateUsers(context) {
 async function downloadRoles(context) {
 	const response = await apiV8.get("/roles");
 	context.roles = response.data.data.filter((role) => {
-		return role.id !== 2; // Role 2 was the hardcoded public role
+		// Directus V8 includes a Public role with id 2 which must be excluded.
+		// Directus V9 does not include a Public role in the response,
+		// so all roles are included.
+		return !(sourceIsV8() && (role.id === 2));
 	});
 }
 
