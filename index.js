@@ -11,7 +11,7 @@ import { migrateData } from "./tasks/data.js";
 import { fetchRelations, migrateRelations } from "./tasks/relations.js";
 import { writeFile } from "fs/promises";
 
-const commandLineOptions = commandLineArgs([
+export const commandLineOptions = commandLineArgs([
 	{
 		name: "skipCollections",
 		alias: "s",
