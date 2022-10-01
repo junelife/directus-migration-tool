@@ -17,14 +17,14 @@ const commandLineOptions = commandLineArgs([
 		alias: "s",
 		type: String,
 		multiple: true,
-		defaultValue: [],
+		defaultValue: process.env.SKIP_COLLECTIONS?.split(',') || [],
 	},
 	{
 		name: "onlyCollections",
 		alias: "o",
 		type: String,
 		multiple: true,
-		defaultValue: [],
+		defaultValue: process.env.ONLY_COLLECTIONS?.split(',') || [],
 	},
 	{
 		name: "useContext",
