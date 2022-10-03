@@ -74,6 +74,12 @@ export const commandLineOptions = commandLineArgs([
 		defaultValue: false,
 		// defaultValue: (process.env.APPLY_SAVED) ? process.env.APPLY_SAVED : false,
 	},
+	{
+		name: "migrateAdminRoles",
+		type: Boolean,
+		multiple: false,
+		defaultValue: false,
+	},
 ]);
 
 const tasks = new Listr([

@@ -90,7 +90,11 @@ async function downloadRoles(context) {
 		// Directus V8 includes a Public role with id 2 which must be excluded.
 		// Directus V9 does not include a Public role in the response,
 		// so all roles are included.
-		return !(sourceIsV8() && (role.id === 2));
+		if (sourceIsV8()) {
+			return !((role.id === 2))
+		} else {
+			return (commandLineOptions.migrateAdminRoles || !role.admin_access)
+		}
 	});
 }
 
