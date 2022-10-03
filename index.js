@@ -167,7 +167,11 @@ export async function writeContext(context, completed = true) {
 	context.completedSteps[context.section] = completed;
 	await fs.promises.writeFile(
 		`./context/state/${context.section}.json`,
-		JSON.stringify(context)
+		JSON.stringify(context, null, 4)
+	);
+	await fs.promises.writeFile(
+		`./context/state/latest.json`,
+		JSON.stringify(context, null, 4)
 	);
 }
 
