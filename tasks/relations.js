@@ -109,9 +109,12 @@ async function migrateRelationsData(context) {
 		)
 		.flat();
 
-	for (const relation of [...relationsV9, ...systemFields]) {
-		await apiV9.post("/relations", relation);
-	}
+	// TODO: skip for "dataOnly"
+	// TODO: this context data is needed for other functions,
+	// TODO: even if not uploaded to target
+	// for (const relation of [...relationsV9, ...systemFields]) {
+	// 	await apiV9.post("/relations", relation);
+	// }
 
 	context.relations = [...relationsV9, ...systemFields];
 
