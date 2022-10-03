@@ -76,7 +76,7 @@ const tasks = new Listr([
 	},
 	{
 		title: "Fetch Relations",
-		skipt: (context) =>
+		skip: (context) =>
 			context.completedSteps.relationsv8 === true &&
 			context.completedSteps.schema === true &&
 			context.completedSteps.relations === true,
