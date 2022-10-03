@@ -196,7 +196,7 @@ async function createUsers(context) {
 					language: user.locale,
 					theme: user.theme,
 					role: context.roleMap[user.role],
-					token: user.token,
+					// token: user.token,
 				},
 			];
 		});
