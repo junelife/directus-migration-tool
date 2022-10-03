@@ -124,7 +124,7 @@ async function createRoles(context) {
 
 	context.roleMap = {};
 
-	let createdRolesAsArray = createdRoles.data.data;
+	let createdRolesAsArray = createdRoles.data?.data || [];
 
 	if (Array.isArray(createdRolesAsArray) === false)
 		createdRolesAsArray = [createdRolesAsArray];
@@ -132,7 +132,7 @@ async function createRoles(context) {
 	context.roles.forEach((role, index) => {
 		context.roleMap[role.id] = createdRolesAsArray.find(
 			(r) => r.name == role.name
-		).id;
+		)?.id;
 	});
 
 	context.roles = createdRolesAsArray;
