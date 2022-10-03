@@ -1,5 +1,12 @@
 import Listr from "listr";
-import { apiV8, apiV9, sourceIsV8 } from "../api.js";
+import {
+	apiV8,
+	apiV9,
+	sourceIsV8,
+	postIgnoringDuplicates,
+	getCount,
+	downloadBatch
+} from "../api.js";
 import { writeContext } from "../index.js";
 import { commandLineOptions } from "../index.js";
 
@@ -48,6 +55,29 @@ export async function migrateUsers(context) {
 			skip: (context) => context.completedSteps.users === true,
 			task: () => {
 				context.section = "users";
+				writeContext(context);
+			},
+		},
+		{
+			title: "Downloading Permissions",
+			skip: (context) => (
+				context.completedSteps.permissions === true ||
+				context.applySaved
+			),
+			task: downloadPermissions,
+		},
+		{
+			title: "Creating Permissions",
+			skip: (context) =>
+				commandLineOptions.users === false ||
+				context.completedSteps.permissions === true,
+			task: createPermissions,
+		},
+		{
+			title: "Saving permissions context",
+			skip: (context) => context.completedSteps.permissions === true,
+			task: () => {
+				context.section = "permissions";
 				writeContext(context);
 			},
 		},
@@ -194,4 +224,62 @@ async function createUsers(context) {
 	});
 
 	context.users = createdUsersAsArray;
+}
+
+async function downloadPermissions(context) {
+	if (!context.applySaved) {
+		const count = await getCount(apiV8, "/permissions");
+		console.log('DEBUG: permissions, found %s', count);
+		const pages = Math.ceil(count / 100);
+		if (!context.permissions) context.permissions = [];
+		for (let i = 0; i < pages; i++) {
+			// const response = await apiV8.get("/permissions");
+			const response = await downloadBatch(apiV8, "/permissions", i);
+			// let permissions = response.data.data;
+			// TODO: V8
+			// let permissions = response.data.data.filter((permission) => {
+			let permissions = response.filter((permission) => {
+					return (permission.role !== null);
+				// TODO: exclude built in permissions
+				// TODO: maybe exclude directus collections, except assets??
+			});
+			context.permissions = context.permissions.concat(permissions);
+		}
+	}
+}
+
+async function createPermissions(context) {
+	const permissionsV9 = context.permissions.map((permission) => (
+		(sourceIsV8()) ? {
+			// TODO: not supported
+	} : {
+		// id: permission.id,
+		role: permission.role,
+		collection: permission.collection,
+		action: permission.action,
+		permissions: permission.permissions,
+		validation: permission.validation,
+		preset: permission.preset,
+		fields: permission.fields,
+	}));
+
+	// TODO: should this be done as an "idempotent" post instead.
+	// const createdRoles = await apiV9.post("/roles", rolesV9, {
+	// 	params: { limit: -1 },
+	// });
+
+	const createdPermissions = await postIgnoringDuplicates(
+		apiV9,
+		"/permissions",
+		permissionsV9,
+		{params: { limit: -1 }}
+	);
+
+	context.permissionMap = {};
+	let createdPermissionsAsArray = createdPermissions;
+
+	if (Array.isArray(createdPermissionsAsArray) === false)
+		createdPermissionsAsArray = [createdPermissionsAsArray];
+
+	context.permissions = createdPermissionsAsArray;
 }
