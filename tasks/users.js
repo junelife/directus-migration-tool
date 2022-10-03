@@ -211,10 +211,12 @@ async function createUsers(context) {
 
 		const createdUsers = response.data.data;
 
+		// TODO: address case where no users created
+		// TODO: address case where user has no email (name matching)
 		for (const userV8 of chunk) {
 			context.userMap[userV8.id] = createdUsers.find(
 				(u) => u.email == userV8.email
-			).id;
+			)?.id;
 		}
 
 		createdUsersAsArray = createdUsersAsArray.concat(createdUsers);
