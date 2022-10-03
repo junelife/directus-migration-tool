@@ -229,9 +229,12 @@ async function createUsers(context) {
 	context.users.forEach((user, index) => {
 		if (context.userMap[user.id]) return;
 
-		context.userMap[user.id] = createdUsersAsArray.find(
+		const matchingUserId = createdUsersAsArray.find(
 			(u) => u.email == user.email
-		).id;
+		)?.id;
+		if (matchingUserId) {
+			context.userMap[user.id] = matchingUserId;
+		};
 	});
 
 	context.users = createdUsersAsArray;
