@@ -119,9 +119,12 @@ async function createRoles(context) {
 			app_access: role.app_access,
 		}));
 
-	const createdRoles = await apiV9.post("/roles", rolesV9, {
-		params: { limit: -1 },
-	});
+	const createdRoles = await postIgnoringDuplicates(
+		apiV9,
+		"/roles",
+		rolesV9,
+		{params: { limit: -1 }}
+	);
 
 	context.roleMap = {};
 
