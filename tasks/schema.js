@@ -43,6 +43,7 @@ export async function downloadSchema(context) {
 	if (!sourceIsV8()) {
 		// In Directus V9, fields are not included on the collections model.
 		// They need to be fetched independently.
+		// TODO: add filter to current collection
 		const fieldsResponse = await apiV8.get("/fields");
 		context.fields = fieldsResponse.data.data
 			.filter(
@@ -191,14 +192,20 @@ function migrateFieldOptions(fieldDetails) {
 }
 
 function migrateCollection(collection, context) {
-	return async () => {
-		const statusField = Object.values(collection.fields).find(
-			(field) => field.interface === "status"
-		);
+	const fields = context.fields
 
+	const collectionFields = Object.values(fields).filter(
+		(field) => field.collection === collection.collection
+	);
+
+	return async () => {
+		const statusField = collection.meta.archive_field;
 		const collectionV9 = {
 			collection: collection.collection,
-			meta: {
+			meta: (!(sourceIsV8()) ?
+					collection.meta
+				:
+				{
 				note: collection.note,
 				hidden: collection.hidden,
 				singleton: collection.single,
@@ -225,61 +232,71 @@ function migrateCollection(collection, context) {
 								.value,
 					  }
 					: {}),
-			},
-			schema: {},
-			fields: Object.values(collection.fields).map((details) => {
-				const relation =
-					context.relationsV8Map?.[collection.collection]?.[details.field] ||
-					{};
+			}),
+			// schema: {}, // TODO: does this work for
+			schema: collection.schema,
+			fields: Object.values(collectionFields).map((details) => {
+				// const relation =
+				// 	context.relationsV8Map?.[collection.collection]?.[details.field] ||
+				// 	{};
 
-				const isUuid =
-					details.field.includes("directus_files_id") ||
-					details.interface === "user-roles" ||
-					["directus_files", "directus_users"].includes(
-						relation?.collection_one
-					);
+				// const isUuid =
+				// 	details.field.includes("directus_files_id") ||
+				// 	details.interface === "user-roles" ||
+				// 	["directus_files", "directus_users"].includes(
+				// 		relation?.collection_one
+				// 	);
 
 				return {
 					field: details.field,
-					type:
-						details.datatype?.toLowerCase() === "text" ||
-						details.datatype?.toLowerCase() === "longtext"
-							? "text"
-							: details.interface === "many-to-many"
-							? "m2m"
-							: isUuid
-							? "uuid"
-							: typeMap[details.type.toLowerCase()],
-					meta: {
-						note: details.note,
-						interface: interfaceMap[(details.interface || "").toLowerCase()],
-						translations: details.translation?.map(
-							({ locale, translation }) => ({
-								language: locale,
-								translation,
-							})
-						),
-						readonly: details.readonly,
-						hidden: details.hidden_detail,
-						width: details.width,
-						special: extractSpecial(details),
-						sort: details.sort,
-						options: migrateFieldOptions(details),
-					},
+					// type: details.datatype,
+					type: details.type,
+					// type:
+					// 	details.datatype?.toLowerCase() === "text" ||
+					// 	details.datatype?.toLowerCase() === "longtext"
+					// 		? "text"
+					// 		: details.interface === "many-to-many"
+					// 		? "m2m"
+					// 		: isUuid
+					// 		? "uuid"
+					// 		: typeMap[details.type.toLowerCase()],
+					meta: details.meta,
+					// meta: {
+					// 		note: details.note,
+					// 	interface: interfaceMap[(details.interface || "").toLowerCase()],
+					// 	translations: details.translation?.map(
+					// 		({ locale, translation }) => ({
+					// 			language: locale,
+					// 			translation,
+					// 		})
+					// 	),
+					// 	readonly: details.readonly,
+					// 	hidden: details.hidden_detail,
+					// 	width: details.width,
+					// 	special: extractSpecial(details),
+					// 	sort: details.sort,
+					// 	options: migrateFieldOptions(details),
+					// },
+					// schema:
+					// 	["alias", "o2m"].includes(typeMap[details.type.toLowerCase()]) ===
+					// 	false
+					// 		? {
+					// 				has_auto_increment: details.auto_increment,
+					// 				default_value: extractValue(details),
+					// 				is_primary_key: details.primary_key,
+					// 				is_nullable: details.required === false,
+					// 				max_length: details.length,
+					// 				numeric_precision:
+					// 					(details.length || "").split(",")[0] || null,
+					// 				numeric_scale: (details.length || "").split(",")[1] || null,
+					// 		  }
+					// 		: undefined,
+					// schema: details.schema
+					// ["alias", "o2m"].includes(typeMap[details.type.toLowerCase()]) === false
 					schema:
-						["alias", "o2m"].includes(typeMap[details.type.toLowerCase()]) ===
-						false
-							? {
-									has_auto_increment: details.auto_increment,
-									default_value: extractValue(details),
-									is_primary_key: details.primary_key,
-									is_nullable: details.required === false,
-									max_length: details.length,
-									numeric_precision:
-										(details.length || "").split(",")[0] || null,
-									numeric_scale: (details.length || "").split(",")[1] || null,
-							  }
-							: undefined,
+						["alias", "o2m"].includes(details.type.toLowerCase()) === false
+						? details.schema
+						: undefined,
 				};
 			}),
 		};
