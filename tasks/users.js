@@ -7,7 +7,10 @@ export async function migrateUsers(context) {
 	return new Listr([
 		{
 			title: "Downloading Roles",
-			skip: (context) => context.completedSteps.roles === true,
+			skip: (context) => (
+				context.completedSteps.roles === true ||
+				context.applySaved
+			),
 			task: downloadRoles,
 		},
 		{
@@ -27,7 +30,10 @@ export async function migrateUsers(context) {
 		},
 		{
 			title: "Downloading Users",
-			skip: (context) => context.completedSteps.users === true,
+			skip: (context) => (
+				context.completedSteps.users === true ||
+				context.applySaved
+			),
 			task: downloadUsers,
 		},
 		{

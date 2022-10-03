@@ -67,6 +67,13 @@ export const commandLineOptions = commandLineArgs([
 		multiple: false,
 		defaultValue: false,
 	},
+	{
+		name: "applySaved",
+		type: Boolean,
+		multiple: false,
+		defaultValue: false,
+		// defaultValue: (process.env.APPLY_SAVED) ? process.env.APPLY_SAVED : false,
+	},
 ]);
 
 const tasks = new Listr([
@@ -176,6 +183,7 @@ async function setupContext(context) {
 	Object.entries(fetchedContext).forEach(([key, value]) => {
 		context[key] = value;
 	});
+	context["applySaved"] = commandLineOptions.applySaved;
 	console.log(`✨ Loaded context succesfully`);
 }
 
