@@ -99,18 +99,27 @@ function uploadBatch(page) {
 				'filename_download': {'_eq': fileRecord.filename_download},
 				'type': {'_eq': fileRecord.type},
 			};
-			const existingFile = await apiV9.get(
-				"/files",
-				{
-					params: {
-						filter: {
-							filename_download: fileRecord.filename_download,
-							title: fileRecord.title,
-							// description: fileRecord.description
-						}
-					},
-				},
-			);
+			let existingFile = null;
+			for (var complete = false; !complete;) {
+				try {
+					existingFile = await apiV9.get(
+						"/files",
+						{
+							params: {
+								filter: {
+									filename_download: fileRecord.filename_download,
+									title: fileRecord.title,
+									// description: fileRecord.description
+								}
+							},
+						},
+					);
+					complete = true;
+				} catch (error) {
+					console.log('ROB: caught error in looking for existing file:%o', error);
+					continue;
+				}
+			};
 			let importedFileId;
 			// console.log('FILES: existing file check result:%o', existingFile);
 			const migratedFiles = existingFile.data.data
@@ -155,21 +164,29 @@ function uploadBatch(page) {
 				// TODO: switch based on Directus version
 				const url = process.env.V8_URL + "/assets/" + fileRecord.id
 				// console.log('ROB: attempting import with url=%s', url)
-				const savedFile = await apiV9.post("/files/import", {
-					url,
-					data: {
-						filename_download: fileRecord.filename_download,
-						title: fileRecord.title,
-						description: fileRecord.description,
-					},
-				});
-				// console.log('FILES: upload result:%o', savedFile);
-				if (savedFile.status !== 200) {
-					console.log("FILES: ERROR importing file:%o", savedFile);
-					continue;
-				} else {
-					console.log("FILES: imported file for %o", fileRecord.id);
-					context.fileMap[fileRecord.id] = savedFile.data.data.id;
+				for (var complete = false; !complete;) {
+					try {
+						const savedFile = await apiV9.post("/files/import", {
+							url,
+							data: {
+								filename_download: fileRecord.filename_download,
+								title: fileRecord.title,
+								description: fileRecord.description,
+							},
+						});
+						// console.log('FILES: upload result:%o', savedFile);
+						if (savedFile.status !== 200) {
+							console.log("FILES: ERROR importing file:%o", savedFile);
+							continue;
+						} else {
+							console.log("FILES: imported file for %o", fileRecord.id);
+							context.fileMap[fileRecord.id] = savedFile.data.data.id;
+						}
+						complete = true;
+					} catch (error) {
+						console.log('ROB: caught error in uploadBatch:%o', error);
+						continue;
+					}
 				}
 			}
 
@@ -187,12 +204,20 @@ function uploadBatch(page) {
 					"height": fileRecord.height,
 					"metadata": fileRecord.metadata, // TODO: do we want this?
 				};
-				// console.log('ROB: updating with data:%o', importedFileData);
-				const updatedFile = await apiV9.patch(
-					`/files/${importedFileId}`,
-					importedFileData,
-				);
-				// console.log("FILES: file update response=%o", updatedFile);
+				for (var complete = false; !complete;) {
+					try {
+						console.log('ROB: updating with data:%o', importedFileData);
+						const updatedFile = await apiV9.patch(
+							`/files/${importedFileId}`,
+							importedFileData,
+						);
+						console.log("FILES: file update response=%o", updatedFile);
+						complete = true;
+					} catch (error) {
+						console.log('ROB: caught error patching file data:%o', error);
+						continue;
+					}
+				}
 			}
 			// context.fileMap[fileRecord.id] = savedFile.data.data.id;
 		}

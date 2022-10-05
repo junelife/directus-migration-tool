@@ -208,11 +208,17 @@ async function createUsers(context) {
 
 		if (!usersV9.length) continue;
 
-		const response = await apiV9.post("/users", usersV9, {
-			params: { limit: -1 },
-		});
+		// const response = await apiV9.post("/users", usersV9, {
+		// 	params: { limit: -1 },
+		// });
+		// const createdUsers = response.data.data;
 
-		const createdUsers = response.data.data;
+		const createdUsers = await postIgnoringDuplicates(
+			apiV9,
+			"/users",
+			usersV9,
+			{params: { limit: -1 }}
+		);
 
 		// TODO: address case where no users created
 		// TODO: address case where user has no email (name matching)

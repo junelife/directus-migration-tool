@@ -1,5 +1,5 @@
 import Listr from "listr";
-import { apiV8, apiV9, sourceIsV8 } from "../api.js";
+import { apiV8, apiV9, sourceIsV8, postIgnoringDuplicates } from "../api.js";
 import { writeContext } from "../index.js";
 
 const LIMIT = 10;
@@ -272,34 +272,45 @@ async function insertBatch(collection, page, context, task) {
 	});
 
 	// Retry failed batches, after removing failed elements
-	while (true) {
-		if (!itemRecords.length) return;
-		try {
-			if (collection.single === true) {
-				await apiV9.patch(`/items/${collection.collection}`, itemRecords[0]);
-			} else {
-				await apiV9.post(`/items/${collection.collection}`, itemRecords);
-			}
-		} catch (error) {
-			const re = /[^{]*(?<err>{[\s\S]+)/mig;
-			let response = re.exec(error)
+	// while (true) {
+	// 	if (!itemRecords.length) return;
+	// 	try {
+	// 		if (collection.single === true) {
+	// 			await apiV9.patch(`/items/${collection.collection}`, itemRecords[0]);
+	// 		} else {
+	// 			await apiV9.post(`/items/${collection.collection}`, itemRecords);
+	// 		}
+	// 	} catch (error) {
+	// 		const re = /[^{]*(?<err>{[\s\S]+)/mig;
+	// 		let response = re.exec(error)
 
-			const errors = JSON.parse(response.groups.err).errors
-			let start = itemRecords.length;
-			for (let e of errors) {
-				if (e.extensions.code === 'RECORD_NOT_UNIQUE') {
-					itemRecords = itemRecords.filter((item) => {
-						return (item.id != e.extensions.invalid);
-					})
-				}
-			}
+	// 		const errors = JSON.parse(response.groups.err).errors
+	// 		let start = itemRecords.length;
+	// 		for (let e of errors) {
+	// 			if (e.extensions.code === 'RECORD_NOT_UNIQUE') {
+	// 				itemRecords = itemRecords.filter((item) => {
+	// 					return (item.id != e.extensions.invalid);
+	// 				})
+	// 			}
+	// 		}
 
-			if ((context.allowFailures === false) &&
-				(itemRecords.length === start)
-			) {
-				throw(error);
-			}
-		}
+	// 		if ((context.allowFailures === false) &&
+	// 			(itemRecords.length === start)
+	// 		) {
+	// 			throw(error);
+	// 		}
+	// 	}
+	// }
+
+	if (collection.single === true) {
+		await apiV9.patch(`/items/${collection.collection}`, itemRecords[0]);
+	} else {
+		await postIgnoringDuplicates(
+			apiV9,
+			`/items/${collection.collection}`,
+			itemRecords,
+			{}
+		)
 	}
 
 	const collectionMap = itemRecords.reduce(
