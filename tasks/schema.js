@@ -2,7 +2,7 @@ import Listr from "listr";
 import { apiV8, apiV9, sourceIsV8 } from "../api.js";
 import { typeMap } from "../constants/type-map.js";
 import { interfaceMap } from "../constants/interface-map.js";
-import { writeContext } from "../index.js";
+import { writeContext, commandLineOptions } from "../index.js";
 
 export async function migrateSchema(context) {
 	context.section = "schema";
@@ -300,6 +300,8 @@ function migrateCollection(collection, context) {
 				};
 			}),
 		};
+		if (commandLineOptions.exportOnly)
+			return;
 		context.collectionsV9.push(collectionV9);
 		await apiV9.post("/collections", collectionV9);
 	};

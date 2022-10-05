@@ -181,6 +181,9 @@ async function createUsers(context) {
 	let offset = 0;
 	const size = 10;
 
+	if (commandLineOptions.exportOnly)
+		return;
+
 	do {
 		chunk = context.users.slice(offset * size, (offset + 1) * size);
 
@@ -282,6 +285,9 @@ async function createPermissions(context) {
 		preset: permission.preset,
 		fields: permission.fields,
 	}));
+
+	if (commandLineOptions.exportOnly)
+		return;
 
 	// TODO: should this be done as an "idempotent" post instead.
 	// const createdRoles = await apiV9.post("/roles", rolesV9, {

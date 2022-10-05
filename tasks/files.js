@@ -1,6 +1,6 @@
 import Listr from "listr";
 import { apiV8, apiV9 } from "../api.js";
-import { writeContext } from "../index.js";
+import { writeContext, commandLineOptions } from "../index.js";
 
 export async function migrateFiles(context) {
 	context.section = "files";
@@ -49,6 +49,9 @@ async function uploadFiles(context) {
 	const pages = Math.ceil(context.fileCount / 100);
 
 	const tasks = [];
+
+	if (commandLineOptions.exportOnly)
+		return;
 
 	console.log("FILES: submitting tasks for %s pages of 100", pages);
 	for (let i = 0; i < pages; i++) {

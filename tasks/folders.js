@@ -1,6 +1,6 @@
 import Listr from "listr";
 import { apiV8, apiV9 } from "../api.js";
-import { writeContext } from "../index.js";
+import { writeContext, commandLineOptions } from "../index.js";
 
 export async function migrateFolders(context) {
 
@@ -67,6 +67,9 @@ function uploadBatch(page) {
 				// filter: context.folders_filter,
 			},
 		});
+
+		if (commandLineOptions.exportOnly)
+			return;
 
 		for (const folderRecord of records.data.data) {
 			// console.log('ROB: uploadBatch processing folderRecord %o', folderRecord)

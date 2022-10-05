@@ -80,6 +80,12 @@ export const commandLineOptions = commandLineArgs([
 		multiple: false,
 		defaultValue: false,
 	},
+	{
+		name: "exportOnly",
+		type: Boolean,
+		multiple: false,
+		defaultValue: false,
+	},
 ]);
 
 const tasks = new Listr([

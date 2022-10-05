@@ -1,6 +1,6 @@
 import Listr from "listr";
 import { apiV8, apiV9, sourceIsV8 } from "../api.js";
-import { writeContext } from "../index.js";
+import { writeContext, commandLineOptions } from "../index.js";
 
 export async function fetchRelations(context) {
 	context.section = "relationsv8";
@@ -54,6 +54,9 @@ async function getRelationsData(context) {
 
 async function migrateRelationsData(context) {
 	const migrated = [];
+
+	if (commandLineOptions.exportOnly)
+		return;
 
 	const relationsV9 = context.relationsV8.flatMap((relation) => {
 		if (context.relationsMigrated[relation.id]) return [];
